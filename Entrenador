@@ -1,0 +1,84 @@
+import cv2
+import os
+import numpy as np
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from skimage.feature import hog
+
+# Ruta al archivo Haar Cascade para detecciÃ³n de ojos
+eye_cascade = cv2.CascadeClassifier('/home/dynamo/Documents/code/eyecascade.xml')
+
+# Directorios con las imÃ¡genes
+carpetas = ["alejandra", "errores"]  # Ajusta segÃºn los nombres de tus carpetas
+base_path = "/home/dynamo/Documents/entrenamiento"  # Cambia a la ruta base de las carpetas
+
+# Archivo para guardar el modelo
+modelo_path = "/home/dynamo/Documents/entrenando_iris/modelo_iris_ojos.pkl"
+
+# Si el modelo existe, cargarlo
+if os.path.exists(modelo_path):
+    svm = joblib.load(modelo_path)
+    print("Modelo cargado desde el archivo existente.")
+else:
+    # Variables para almacenar datos y etiquetas
+    data = []
+    labels = []
+
+    # Procesar cada carpeta
+    for label, carpeta in enumerate(carpetas):
+        carpeta_path = os.path.join(base_path, carpeta)
+        for imagen_nombre in os.listdir(carpeta_path):
+            imagen_path = os.path.join(carpeta_path, imagen_nombre)
+            img = cv2.imread(imagen_path, cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                continue
+
+            # Detectar ojos
+            ojos = eye_cascade.detectMultiScale(img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            for (x, y, w, h) in ojos:
+                ojo = img[y:y+h, x:x+w]
+                ojo_resized = cv2.resize(ojo, (64, 64))  # Redimensionar para normalizaciÃ³n
+
+                # Extraer caracterÃ­sticas usando HOG
+                hog_features = hog(ojo_resized, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualize=False)
+                data.append(hog_features)
+                labels.append(label)
+                break  # Tomar solo el primer ojo detectado en cada imagen
+
+    # Convertir datos a arrays
+    data = np.array(data)
+    labels = np.array(labels)
+
+    # Dividir en entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+
+    # Entrenar un modelo SVM
+    svm = SVC(kernel='linear', probability=True)
+    svm.fit(X_train, y_train)
+
+    # Evaluar el modelo
+    y_pred = svm.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Precision del modelo: {accuracy:.2f}")
+
+    # Guardar el modelo
+    joblib.dump(svm, modelo_path)
+    print(f"Modelo entrenado y guardado como '{modelo_path}'.")
+
+# Probar con una nueva imagen
+def predecir_ojos(imagen_path):
+    img = cv2.imread(imagen_path, cv2.IMREAD_GRAYSCALE)
+    ojos = eye_cascade.detectMultiScale(img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    for (x, y, w, h) in ojos:
+        ojo = img[y:y+h, x:x+w]
+        ojo_resized = cv2.resize(ojo, (64, 64))
+        hog_features = hog(ojo_resized, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualize=False)
+        prediccion = svm.predict([hog_features])[0]
+        print(f"Ojo detectado pertenece a la persona: {carpetas[prediccion]}")
+        break
+
+# Prueba con una imagen nueva
+prueba_path = "C:/Users/Brayan/Documents/proyectos/IRIS/ojos/aleja/IMG_20241107_180140_TIMEBURST53.jpg"  # Cambia a la ruta de tu imagen de prueba
+predecir_ojos(prueba_path)
