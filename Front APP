@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Gestión de Usuarios, Fotos y Entrenamiento</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      background-color: #f2f2f2; 
+    }
+    header { 
+      background-color: #00008B; 
+      color: white; 
+      padding: 20px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    header img {
+      height: 80px;
+    }
+    header h1 { 
+      font-size: 24px; 
+      margin: 0;
+    }
+    .titulo { 
+      font-size: 24px; 
+      color: #8DB600; 
+      font-weight: bold; 
+      margin-bottom: 10px; 
+    }
+    form { 
+      background: white; 
+      padding: 20px; 
+      border-radius: 10px; 
+      margin: auto; 
+      width: 300px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+    }
+    label { 
+      font-weight: bold; 
+      text-align: left; 
+    }
+    input { 
+      padding: 8px; 
+      margin-bottom: 10px; 
+      border-radius: 5px; 
+      border: 1px solid #ccc; 
+      width: 100%; 
+    }
+    .btn { 
+      border: none; 
+      border-radius: 5px; 
+      margin: 5px; 
+      cursor: pointer; 
+      font-size: 12px; 
+      transition: background-color 0.3s ease, box-shadow 0.3s ease; 
+    }
+    /* Nuevo estilo para el botón Agregar */
+    .btn-agregar { 
+      background-color: #FF4500; 
+      color: #fff; 
+      padding: 8px 16px; 
+      font-size: 14px; 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+      border-radius: 8px;
+    }
+    .btn-agregar:hover { 
+      background-color: #E03E00; 
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    .btn-capturar { 
+      background-color: #28a745; 
+      color: white; 
+      padding: 8px 16px;
+    }
+    .btn-eliminar { 
+      background-color: red; 
+      color: white; 
+      padding: 9px; 
+    }
+    .btn-toggle { 
+      background-color: #FFA500; 
+      color: white; 
+      padding: 8px 16px;
+    }
+    table { 
+      margin: auto; 
+      border-collapse: collapse; 
+      width: 80%; 
+      background: white; 
+    }
+    table, th, td { 
+      border: 1px solid #ccc; 
+      padding: 10px; 
+      text-align: center; 
+    }
+    /* Estilos para el área de entrenamiento */
+    .hidden { 
+      display: none; 
+      margin: 20px auto; 
+      width: 80%; 
+      max-width: 600px; 
+      background: white; 
+      padding: 20px; 
+      border-radius: 10px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+    }
+    textarea { 
+      width: 100%; 
+      padding: 8px; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+      font-family: monospace; 
+    }
+  </style>
+  <script>
+    // Funciones para alternar entre formulario y lista de usuarios
+    function mostrarLista() {
+      document.getElementById("agregar-container").style.display = "none";
+      document.getElementById("usuarios-container").style.display = "block";
+    }
+    function mostrarFormulario() {
+      document.getElementById("agregar-container").style.display = "block";
+      document.getElementById("usuarios-container").style.display = "none";
+    }
+    // Funciones para alternar el área de entrenamiento
+    function toggleEntrenar() {
+      var container = document.getElementById("entrenar-container");
+      if (container.style.display === "none" || container.style.display === "") {
+        container.style.display = "block";
+      } else {
+        container.style.display = "none";
+      }
+    }
+    function ejecutarEntrenamiento() {
+      var codigo = document.getElementById("codigo-entrenamiento").value;
+      console.log("Ejecutando entrenamiento con el siguiente código:");
+      console.log(codigo);
+      alert("Entrenamiento ejecutado (simulado). Revisa la consola para ver el código.");
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    <h1>COORDINACIÓN DE TELECOMUNICACIONES</h1>
+  </header>
+  <!-- Formulario de Registro -->
+  <div id="agregar-container">
+    <h2 class="titulo">Registro de Usuario</h2>
+    <form method="POST">
+      <label for="nombre_completo">Nombre Completo:</label>
+      <input type="text" id="nombre_completo" name="nombre_completo" placeholder="Nombre Completo" required> 
+      <label for="cedula">Cédula:</label>
+      <input type="text" id="cedula" name="cedula" placeholder="Cédula" required>
+      <label for="asignatura">Asignatura:</label>
+      <input type="text" id="asignatura" name="asignatura" placeholder="Asignatura" required>
+      <button type="submit" name="agregar" class="btn btn-agregar">Agregar</button>
+    </form>
+    <button class="btn btn-toggle" onclick="mostrarLista()">Ver Lista de Usuarios</button>
+  </div>
+  <!-- Lista de Usuarios -->
+  <div id="usuarios-container" style="display: none;">
+    <h2 class="titulo">Lista de Usuarios</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Cédula</th>
+          <th>Asignatura</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+          <td>{{ usuario.nombre_completo }}</td>
+          <td>{{ usuario.cedula }}</td>
+          <td>{{ usuario.asignatura }}</td>
+          <td>
+            <!-- Botón para eliminar al usuario -->
+            <form method="POST" style="display:inline;">
+              <input type="hidden" name="id" value="{{ usuario.id }}">
+              <button type="submit" name="eliminar" class="btn btn-eliminar">Eliminar</button>
+            </form>
+            <!-- Botón para agregar fotos adicionales -->
+            <button class="btn btn-capturar" onclick="location.href='{{ url_for('tomarfotos_usuario', usuario_id=usuario.id) }}'">
+              Agregar Foto
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button class="btn btn-toggle" onclick="mostrarFormulario()">Volver al Registro</button>
+  </div>
+  <!-- Botón para mostrar/ocultar el área de entrenamiento -->
+  <button class="btn btn-toggle" onclick="toggleEntrenar()">Entrenar Algoritmo</button>
+  <!-- Área oculta para ingresar y ejecutar el código de entrenamiento -->
+  <div id="entrenar-container" class="hidden">
+    <h2 class="titulo">Código de Entrenamiento</h2>
+    <textarea id="codigo-entrenamiento" rows="8" placeholder="Escribe aquí tu código de entrenamiento..."></textarea>
+    <br>
+    <button class="btn btn-toggle" onclick="ejecutarEntrenamiento()">Ejecutar Entrenamiento</button>
+  </div>
+</body>
+</html>
